@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Delaunay;
 using Delaunay.Geo;
+using van;
 using van.map;
 using Random = UnityEngine.Random;
 
@@ -305,8 +306,25 @@ public class MyPolygonTest : MonoBehaviour
 				continue;
 			Color c = Random.ColorHSV(0.5f, 1f, 0.5f, 1f, 0.5f, 1f, 1f, 1f);
 			var list = center.edges;
-			var list_vec = sortBound(list);
-			DrawTool.DrawPolygon(list_vec, c);
+//			var list_vec = sortBound(list);
+//			DrawTool.DrawPolygon(list_vec, c);
+
+			foreach (var mapEdge in list)
+			{
+				var noisyEdge = NoisyEdge.getNoisyEdge(mapEdge);
+				var listP0 = new List<Vector2>(noisyEdge.path0);
+				var listP1 = new List<Vector2>(noisyEdge.path1);
+				for (int i = 0; i < listP0.Count-1; i++)
+				{
+					var arr = new List<Vector2>(){listP0[i],listP0[i+1],center.position};
+					DrawTool.DrawPolygon(arr, c);
+				}
+				for (int i = 0; i < listP1.Count-1; i++)
+				{
+					var arr = new List<Vector2>(){listP1[i],listP1[i+1],center.position};
+					DrawTool.DrawPolygon(arr, c);
+				}
+			}
 		}
 	}
 	
