@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 using Delaunay;
 using Delaunay.Geo;
 using van;
@@ -110,12 +111,16 @@ public class MyPolygonTest : MonoBehaviour
 //		}
 	}
 
+	public LineRenderer lineRenderer;
+	
 	private Dictionary<Vector2, MapCenter> dic_centers;
 	private Dictionary<(Vector2, Vector2), MapEdge> dic_MapEdge;
 	private List<MapCenter> mapCenters;
 	private List<MapEdge> mapEdges;
 	private void generateData()
 	{
+		NoisyEdge.init();
+		
 		dic_centers = new Dictionary<Vector2, MapCenter>();
 		dic_MapEdge = new Dictionary<(Vector2, Vector2), MapEdge>();
 		
@@ -304,7 +309,7 @@ public class MyPolygonTest : MonoBehaviour
 			checkOutMost(center);
 			if(center.isOcean)
 				continue;
-			Color c = Random.ColorHSV(0.5f, 1f, 0.5f, 1f, 0.5f, 1f, 1f, 1f);
+			Color c = Random.ColorHSV(0.5f, 1f, 0.5f, 1f, 0.5f, 1f, 0.5f, 0.5f);
 			var list = center.edges;
 //			var list_vec = sortBound(list);
 //			DrawTool.DrawPolygon(list_vec, c);
@@ -314,16 +319,32 @@ public class MyPolygonTest : MonoBehaviour
 				var noisyEdge = NoisyEdge.getNoisyEdge(mapEdge);
 				var listP0 = new List<Vector2>(noisyEdge.path0);
 				var listP1 = new List<Vector2>(noisyEdge.path1);
-				for (int i = 0; i < listP0.Count-1; i++)
-				{
-					var arr = new List<Vector2>(){listP0[i],listP0[i+1],center.position};
-					DrawTool.DrawPolygon(arr, c);
-				}
-				for (int i = 0; i < listP1.Count-1; i++)
-				{
-					var arr = new List<Vector2>(){listP1[i],listP1[i+1],center.position};
-					DrawTool.DrawPolygon(arr, c);
-				}
+//				for (int i = 0; i < listP0.Count-1; i++)
+//				{
+//					var arr = new List<Vector2>(){listP0[i],listP0[i+1],center.position};
+//					DrawTool.DrawPolygon(arr, c);
+//				}
+//				for (int i = 0; i < listP1.Count-1; i++)
+//				{
+//					var arr = new List<Vector2>(){listP1[i],listP1[i+1],center.position};
+//					DrawTool.DrawPolygon(arr, c);
+//				}
+				var l0 = new List<Vector2>(listP0);
+				var l1 = new List<Vector2>(listP1);
+				l0.Add(center.position);
+				l1.Add(center.position);
+				DrawTool.DrawPolygon(l0, c);
+				DrawTool.DrawPolygon(l1, c);
+				
+				var line = Instantiate(this.lineRenderer, Vector3.zero,Quaternion.identity);
+				var list_v3 = Array.ConvertAll<Vector2, Vector3>(listP0.ToArray(), v => v);
+				line.positionCount = listP0.Count;
+				line.SetPositions(list_v3);
+				
+				line = Instantiate(this.lineRenderer, Vector3.zero,Quaternion.identity);
+				list_v3 = Array.ConvertAll<Vector2, Vector3>(listP1.ToArray(), v => v);
+				line.positionCount = listP1.Count;
+				line.SetPositions(list_v3);
 			}
 		}
 	}

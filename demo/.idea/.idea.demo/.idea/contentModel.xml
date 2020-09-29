@@ -30,6 +30,7 @@
           </e>
           <e p="utils" t="Include">
             <e p="DrawTool.cs" t="Include" />
+            <e p="FastNoiseLite.cs" t="Include" />
             <e p="IDisposable.cs" t="Include" />
           </e>
           <e p="van" t="Include">

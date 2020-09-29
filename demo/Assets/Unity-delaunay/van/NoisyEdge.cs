@@ -10,6 +10,22 @@ namespace van
 
         private static Dictionary<MapEdge, NoisyEdge> dic = new Dictionary<MapEdge, NoisyEdge>();
 
+        private static FastNoiseLite warpNoise;
+        public static void init()
+        {
+            warpNoise = new FastNoiseLite();
+            
+            warpNoise.SetSeed(1337);
+            warpNoise.SetDomainWarpType(FastNoiseLite.DomainWarpType.OpenSimplex2);
+            warpNoise.SetRotationType3D(FastNoiseLite.RotationType3D.None);
+            warpNoise.SetDomainWarpAmp(100);
+            warpNoise.SetFrequency(0.01f);
+            warpNoise.SetFractalType(FastNoiseLite.FractalType.DomainWarpIndependent);
+            warpNoise.SetFractalOctaves(3);
+            warpNoise.SetFractalLacunarity(2);
+            warpNoise.SetFractalGain(0.5f);
+        }
+        
         private MapEdge _mapEdge;
         public List<Vector2> path0;
         public List<Vector2> path1;
@@ -19,6 +35,40 @@ namespace van
             _mapEdge = mapEdge;
             
             buildNoisyEdge();
+//            buildNoisyEdgeByWarp();
+        }
+
+
+        public static int count = 0;
+        private static float RATIO = 10;
+        private void buildNoisyEdgeByWarp()
+        {
+            path0 = new List<Vector2>();
+            path1 = new List<Vector2>();
+
+//            path0.Add(_mapEdge.p0);
+            for (int i = 0; i <= 10; i++)
+            {
+                var p = Vector2.Lerp(_mapEdge.p0, _mapEdge.p1, 0.1f * i);
+                var x = Mathf.Floor(p.x*RATIO);
+                var y = Mathf.Floor(p.y*RATIO);
+                var z = 0f;
+                if (count == 0)
+                {
+                    Debug.Log($"before({x},{y})");
+                }
+                warpNoise.DomainWarp(ref x,ref y,ref z);
+
+                if (count == 0)
+                {
+                    Debug.Log($"after({x},{y})");
+                }
+                Vector2 v = new Vector2(x/RATIO,y/RATIO);
+                this.path0.Add(v);
+            }
+//            path0.Add(_mapEdge.p1);
+
+            count++;
         }
         
         public void buildNoisyEdge()
@@ -65,8 +115,11 @@ namespace van
                 var H = Vector2.Lerp(E, F, q);
 
                 // Divide the quad into subquads, but meet at H
-                var s = 1f - Random.Range(-0.4f, 0.4f);
-                var t = 1f - Random.Range(-0.4f, 0.4f);
+//                var s = 0.5f - Random.Range(-0.4f, 0.4f);
+//                var t = 0.5f - Random.Range(-0.4f, 0.4f);
+
+                var s = 0.5f;
+                var t = 0.5f;
 
                 subdivide(A,Vector2.Lerp(G,B,s),H,Vector2.Lerp(E,D,t));
                 points.Add(H);
