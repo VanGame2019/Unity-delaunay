@@ -33,7 +33,13 @@
             <e p="IDisposable.cs" t="Include" />
           </e>
           <e p="van" t="Include">
+            <e p="map" t="Include">
+              <e p="MapCenter.cs" t="Include" />
+              <e p="MapEdge.cs" t="Include" />
+              <e p="MapExtension.cs" t="Include" />
+            </e>
             <e p="MyPolygonTest.cs" t="Include" />
+            <e p="NoisyEdge.cs" t="Include" />
             <e p="PolygonTester.cs" t="Include" />
             <e p="TestPolygon.cs" t="Include" />
             <e p="Triangulator.cs" t="Include" />

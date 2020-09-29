@@ -96,7 +96,8 @@ namespace Delaunay
 		{
 			return _edges;
 		}
-          
+		
+		//应该是 某个点的所处区域
 		public List<Vector2> Region (Vector2 p)
 		{
 			Site site = _sitesIndexedByLocation [p];
@@ -106,6 +107,7 @@ namespace Delaunay
 			return site.Region (_plotBounds);
 		}
 
+		//应该是 某点的相邻所有点
 		// TODO: bug: if you call this before you call region(), something goes wrong :(
 		public List<Vector2> NeighborSitesForSite (Vector2 coord)
 		{
@@ -123,34 +125,45 @@ namespace Delaunay
 			return points;
 		}
 
+		//所有点
 		public List<Circle> Circles ()
 		{
 			return _sites.Circles ();
 		}
 		
+		//当前点的多边形边界
 		public List<LineSegment> VoronoiBoundaryForSite (Vector2 coord)
 		{
 			return DelaunayHelpers.VisibleLineSegments (DelaunayHelpers.SelectEdgesForSitePoint (coord, _edges));
 		}
 
+		//当前点与周边相邻点的连线
 		public List<LineSegment> DelaunayLinesForSite (Vector2 coord)
 		{
 			return DelaunayHelpers.DelaunayLinesForEdges (DelaunayHelpers.SelectEdgesForSitePoint (coord, _edges));
 		}
 		
+		//所有边线
 		public List<LineSegment> VoronoiDiagram ()
 		{
 			return DelaunayHelpers.VisibleLineSegments (_edges);
 		}
 		
+		//所有三角形
 		public List<LineSegment> DelaunayTriangulation (/*BitmapData keepOutMask = null*/)
 		{
 			return DelaunayHelpers.DelaunayLinesForEdges (DelaunayHelpers.SelectNonIntersectingEdges (/*keepOutMask,*/_edges));
 		}
-		
+
+		//最外圈的中心点连成的边线
 		public List<LineSegment> Hull ()
 		{
 			return DelaunayHelpers.DelaunayLinesForEdges (HullEdges ());
+		}
+
+		public List<LineSegment> HullEdgesTest()
+		{
+			return DelaunayHelpers.VisibleLineSegments(HullEdges());
 		}
 		
 		private List<Edge> HullEdges ()
@@ -160,6 +173,7 @@ namespace Delaunay
 			});
 		}
 
+		//更外圈的中心点连成的边线 
 		public List<Vector2> HullPointsInOrder ()
 		{
 			List<Edge> hullEdges = HullEdges ();
@@ -185,13 +199,15 @@ namespace Delaunay
 			return points;
 		}
 		
+		//生成树
 		public List<LineSegment> SpanningTree (KruskalType type = KruskalType.MINIMUM/*, BitmapData keepOutMask = null*/)
 		{
 			List<Edge> edges = DelaunayHelpers.SelectNonIntersectingEdges (/*keepOutMask,*/_edges);
 			List<LineSegment> segments = DelaunayHelpers.DelaunayLinesForEdges (edges);
 			return DelaunayHelpers.Kruskal (segments, type);
 		}
-
+		
+		//所有的多边形区域的角点
 		public List<List<Vector2>> Regions ()
 		{
 			return _sites.Regions (_plotBounds);
@@ -208,13 +224,15 @@ namespace Delaunay
 		 * @param x
 		 * @param y
 		 * @return coordinates of nearest Site to (x, y)
-		 * 
+		 *
+		 * 应该是 获取最近的中心点
 		 */
 		public Nullable<Vector2> NearestSitePoint (/*BitmapData proximityMap,*/float x, float y)
 		{
 			return _sites.NearestSitePoint (/*proximityMap,*/x, y);
 		}
 		
+		//应该是所有中心点
 		public List<Vector2> SiteCoords ()
 		{
 			return _sites.SiteCoords ();
