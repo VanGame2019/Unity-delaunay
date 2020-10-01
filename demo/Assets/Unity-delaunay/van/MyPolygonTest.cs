@@ -2,8 +2,10 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Delaunay;
 using Delaunay.Geo;
+using ETModel;
 using van;
 using van.map;
 using Random = UnityEngine.Random;
@@ -158,6 +160,77 @@ public class MyPolygonTest : MonoBehaviour
 			mapCenters.Add(center);
 		}
 
+		//去除最外圈
+		foreach (var mapCenter in mapCenters)
+		{
+			checkOutMost(mapCenter);
+		}
+		
+		generateZongmen();
+	}
+
+	private void generateZongmen()
+	{
+		var list = new List<MapCenter>(this.mapCenters);
+		list = list.Where((c) => !c.isOcean).ToList();
+		
+		//生成大宗门
+		list = MyModelTool.RandomList(list);
+		
+		int count_big = Mathf.CeilToInt(list.Count / 10f);
+		for (int i = 0; i < count_big; i++)
+		{
+			list[i].rank = eCenterRank.Big;
+		}
+		var list_big = list.Take(count_big).ToArray();
+		
+		//生成小宗门 大家族 
+		list = list.Skip(count_big).ToList();
+		list = MyModelTool.RandomList(list);
+		int count_mid = Mathf.CeilToInt(list.Count / 4f);
+		for (int i = 0; i < count_mid; i++)
+		{
+			list[i].rank = eCenterRank.Mid;
+		}
+
+		//生成村落 小家族
+		//剩下都是 默认为小
+		
+		//为除大宗门外的其他进行上级分配
+		//先中级
+
+		var list_mid = list.Take(count_mid).ToList();
+		foreach (var mid in list_mid)
+		{
+			var minDst = float.MaxValue;
+			foreach (var big in list_big)
+			{
+				var distance = Vector2.Distance(mid.position, big.position);
+				if (distance < minDst)
+				{
+					minDst = distance;
+					mid.boss = big;
+				}
+			}
+			mid.boss.underList.Add(mid);
+		}
+		
+		//再低级
+		var list_small = list.Skip(count_mid).ToList();
+		foreach (var small in list_small)
+		{
+			var minDst = float.MaxValue;
+			foreach (var mid in list_mid)
+			{
+				var distance = Vector2.Distance(small.position, mid.position);
+				if (distance < minDst)
+				{
+					minDst = distance;
+					small.boss = mid;
+				}
+			}
+			small.boss.underList.Add(small);
+		}
 	}
 
 	private MapCenter getMapCenter(Vector2 v)
@@ -300,35 +373,54 @@ public class MyPolygonTest : MonoBehaviour
 			}
 		}
 	}
+
+	private List<MapEdge> getOutLine(List<MapCenter> list)
+	{
+		Dictionary<MapEdge,int> dic_edges = new Dictionary<MapEdge, int>();
+
+		foreach (var mapCenter in list)
+		{
+			foreach (var mapCenterEdge in mapCenter.edges)
+			{
+				if (dic_edges.ContainsKey(mapCenterEdge))
+				{
+					dic_edges[mapCenterEdge]++;
+				}
+				else
+				{
+					dic_edges.Add(mapCenterEdge,1);
+				}
+			}
+		}
+
+		List<MapEdge> list_edge = new List<MapEdge>();
+		foreach (var item in dic_edges)
+		{
+			if (item.Value == 1)
+			{
+				list_edge.Add(item.Key);
+			}
+		}
+
+		return list_edge;
+	}
 	
 	private void renderMapData()
 	{
 		foreach (var mapCenter in mapCenters)
 		{
 			var center = mapCenter;
-			checkOutMost(center);
 			if(center.isOcean)
 				continue;
 			Color c = Random.ColorHSV(0.5f, 1f, 0.5f, 1f, 0.5f, 1f, 0.5f, 0.5f);
 			var list = center.edges;
-//			var list_vec = sortBound(list);
-//			DrawTool.DrawPolygon(list_vec, c);
 
 			foreach (var mapEdge in list)
 			{
 				var noisyEdge = NoisyEdge.getNoisyEdge(mapEdge);
 				var listP0 = new List<Vector2>(noisyEdge.path0);
 				var listP1 = new List<Vector2>(noisyEdge.path1);
-//				for (int i = 0; i < listP0.Count-1; i++)
-//				{
-//					var arr = new List<Vector2>(){listP0[i],listP0[i+1],center.position};
-//					DrawTool.DrawPolygon(arr, c);
-//				}
-//				for (int i = 0; i < listP1.Count-1; i++)
-//				{
-//					var arr = new List<Vector2>(){listP1[i],listP1[i+1],center.position};
-//					DrawTool.DrawPolygon(arr, c);
-//				}
+
 				var l0 = new List<Vector2>(listP0);
 				var l1 = new List<Vector2>(listP1);
 				l0.Add(center.position);
@@ -336,17 +428,52 @@ public class MyPolygonTest : MonoBehaviour
 				DrawTool.DrawPolygon(l0, c);
 				DrawTool.DrawPolygon(l1, c);
 				
+//				var line = Instantiate(this.lineRenderer, Vector3.zero,Quaternion.identity);
+//				var list_v3 = Array.ConvertAll<Vector2, Vector3>(listP0.ToArray(), v => v);
+//				line.positionCount = listP0.Count;
+//				line.SetPositions(list_v3);
+//				
+//				line = Instantiate(this.lineRenderer, Vector3.zero,Quaternion.identity);
+//				list_v3 = Array.ConvertAll<Vector2, Vector3>(listP1.ToArray(), v => v);
+//				line.positionCount = listP1.Count;
+//				line.SetPositions(list_v3);
+			}
+		}
+
+		var list_big = mapCenters.Where((c) => c.rank == eCenterRank.Big).ToList();
+		var list_mid = mapCenters.Where((c => c.rank == eCenterRank.Mid)).ToList();
+		var list_small = mapCenters.Where((c) => c.rank == eCenterRank.Small).ToList();
+
+		foreach (var big in list_big)
+		{
+			var list_all = big.getAllUnderlist();
+			
+			var outline_big = getOutLine(list_all);
+			var outline_mid = getOutLine(list_mid).Except(outline_big).ToList();
+			var outline_small = getOutLine(list_small).Except(outline_mid).Except(outline_big).ToList();
+
+			foreach (var mapEdge in outline_big)
+			{
+				var noisyEdge = NoisyEdge.getNoisyEdge(mapEdge);
+				var listP0 = new List<Vector2>(noisyEdge.path0);
+				var listP1 = new List<Vector2>(noisyEdge.path1);
+
 				var line = Instantiate(this.lineRenderer, Vector3.zero,Quaternion.identity);
+				line.transform.localScale = Vector3.one*4f;
 				var list_v3 = Array.ConvertAll<Vector2, Vector3>(listP0.ToArray(), v => v);
 				line.positionCount = listP0.Count;
 				line.SetPositions(list_v3);
 				
 				line = Instantiate(this.lineRenderer, Vector3.zero,Quaternion.identity);
+				line.transform.localScale = Vector3.one*4f;
 				list_v3 = Array.ConvertAll<Vector2, Vector3>(listP1.ToArray(), v => v);
 				line.positionCount = listP1.Count;
 				line.SetPositions(list_v3);
+			
 			}
 		}
+		
+		
 	}
 	
 	private void render()
