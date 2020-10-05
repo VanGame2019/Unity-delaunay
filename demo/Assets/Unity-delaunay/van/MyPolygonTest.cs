@@ -475,8 +475,8 @@ public class MyPolygonTest : MonoBehaviour
 			var list_all = big.getAllUnderlist();
 			
 			var outline_big = getOutLine(list_all);
-			var outline_mid = getOutLine(list_mid).Except(outline_big).ToList();
-			var outline_small = getOutLine(list_small).Except(outline_mid).Except(outline_big).ToList();
+//			var outline_mid = getOutLine(list_mid).Except(outline_big).ToList();
+//			var outline_small = getOutLine(list_small).Except(outline_mid).Except(outline_big).ToList();
 
 			foreach (var mapEdge in outline_big)
 			{
@@ -502,8 +502,38 @@ public class MyPolygonTest : MonoBehaviour
 			var center = getCenterCenter(list_all);
 			this.gizmosCenter.Add(center.position);
 		}
+
+		foreach (var mid in list_mid)
+		{
+			var midGroup = mid.getAllUnderlist();
+			
+			var outline_all_big = getOutLine(list_big);
+			var outline_all_mid = getOutLine(midGroup);
+			var outline_toDraw = outline_all_mid.Distinct();
+//			outline_toDraw = outline_toDraw.Except(outline_all_big).ToList();
+
+			foreach (var mapEdge in outline_toDraw)
+			{
+				var noisyEdge = NoisyEdge.getNoisyEdge(mapEdge);
+				var listP0 = new List<Vector2>(noisyEdge.path0);
+				var listP1 = new List<Vector2>(noisyEdge.path1);
+
+				var line = Instantiate(this.lineRenderer, Vector3.zero,Quaternion.identity);
+				line.transform.localScale = Vector3.one*2f;
+				var list_v3 = Array.ConvertAll<Vector2, Vector3>(listP0.ToArray(), v => v);
+				line.positionCount = listP0.Count;
+				line.SetPositions(list_v3);
+				
+				line = Instantiate(this.lineRenderer, Vector3.zero,Quaternion.identity);
+				line.transform.localScale = Vector3.one*2f;
+				list_v3 = Array.ConvertAll<Vector2, Vector3>(listP1.ToArray(), v => v);
+				line.positionCount = listP1.Count;
+				line.SetPositions(list_v3);
+			}
+		}
 		
 		
+
 	}
 
 	private List<Vector2> gizmosCenter;
