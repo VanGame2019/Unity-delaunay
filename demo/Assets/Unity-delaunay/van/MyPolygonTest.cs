@@ -177,7 +177,7 @@ public class MyPolygonTest : MonoBehaviour
 		//生成大宗门
 		list = MyModelTool.RandomList(list);
 		
-		int count_big = Mathf.CeilToInt(list.Count / 10f);
+		int count_big = Mathf.CeilToInt(list.Count / 20f);
 		for (int i = 0; i < count_big; i++)
 		{
 			list[i].rank = eCenterRank.Big;
@@ -404,6 +404,31 @@ public class MyPolygonTest : MonoBehaviour
 
 		return list_edge;
 	}
+
+	private MapCenter getCenterCenter(List<MapCenter> list)
+	{
+		Bounds bounds = new Bounds(list[0].position,Vector3.one);
+		for (int i = 1; i < list.Count; i++)
+		{
+			bounds.Encapsulate(list[i].position);
+		}
+
+		var centerPoint = bounds.center;
+		MapCenter center = list[0];
+		var minDst = float.MaxValue;
+		foreach (var mapCenter in list)
+		{
+			var distance = Vector2.Distance(centerPoint, mapCenter.position);
+			if (distance < minDst)
+			{
+				minDst = distance;
+				center = mapCenter;
+			}
+
+		}
+		
+		return center;
+	}
 	
 	private void renderMapData()
 	{
@@ -444,6 +469,7 @@ public class MyPolygonTest : MonoBehaviour
 		var list_mid = mapCenters.Where((c => c.rank == eCenterRank.Mid)).ToList();
 		var list_small = mapCenters.Where((c) => c.rank == eCenterRank.Small).ToList();
 
+		this.gizmosCenter = new List<Vector2>();
 		foreach (var big in list_big)
 		{
 			var list_all = big.getAllUnderlist();
@@ -471,10 +497,16 @@ public class MyPolygonTest : MonoBehaviour
 				line.SetPositions(list_v3);
 			
 			}
+
+
+			var center = getCenterCenter(list_all);
+			this.gizmosCenter.Add(center.position);
 		}
 		
 		
 	}
+
+	private List<Vector2> gizmosCenter;
 	
 	private void render()
 	{
@@ -496,6 +528,15 @@ public class MyPolygonTest : MonoBehaviour
 			}
 		}
 
+		Gizmos.color = Color.magenta;
+		if (gizmosCenter != null)
+		{
+			for (int i = 0; i < gizmosCenter.Count; i++)
+			{
+				Gizmos.DrawSphere(gizmosCenter[i],1f);
+			}
+		}
+		
 		if (m_test != null) {
 			Gizmos.color = Color.green;
 			for (int i = 0; i< m_test.Count; i++)
