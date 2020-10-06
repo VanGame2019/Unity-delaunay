@@ -16,6 +16,24 @@ namespace van.map
         public eCenterRank rank = eCenterRank.Small;
         public MapCenter boss = null;
         public List<MapCenter> underList = new List<MapCenter>();
+
+        private Color _color = Color.black;
+        public Color color
+        {
+            get
+            {
+                if (this.boss == null)
+                {
+                    if (this._color == Color.black)
+                    {
+                        this._color = Random.ColorHSV(0.5f, 1f, 0.5f, 1f, 0.5f, 1f, 0.5f, 0.5f);
+                    }
+                    return _color;
+                }
+
+                return this.boss.color;
+            }
+        }
         
         public MapCenter(Vector2 p)
         {

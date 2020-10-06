@@ -450,8 +450,8 @@ public class MyPolygonTest : MonoBehaviour
 				var l1 = new List<Vector2>(listP1);
 				l0.Add(center.position);
 				l1.Add(center.position);
-				DrawTool.DrawPolygon(l0, c);
-				DrawTool.DrawPolygon(l1, c);
+				DrawTool.DrawPolygon(l0, mapCenter.color);
+				DrawTool.DrawPolygon(l1, mapCenter.color);
 				
 //				var line = Instantiate(this.lineRenderer, Vector3.zero,Quaternion.identity);
 //				var list_v3 = Array.ConvertAll<Vector2, Vector3>(listP0.ToArray(), v => v);
