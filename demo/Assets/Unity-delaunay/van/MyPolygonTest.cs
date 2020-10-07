@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using Delaunay;
 using Delaunay.Geo;
 using ETModel;
+using TMPro;
 using van;
 using van.map;
 using Random = UnityEngine.Random;
@@ -114,6 +115,8 @@ public class MyPolygonTest : MonoBehaviour
 	}
 
 	public LineRenderer lineRenderer;
+	public TextMeshPro textMeshPro;
+	public GameObject goName;
 	
 	private Dictionary<Vector2, MapCenter> dic_centers;
 	private Dictionary<(Vector2, Vector2), MapEdge> dic_MapEdge;
@@ -405,7 +408,7 @@ public class MyPolygonTest : MonoBehaviour
 		return list_edge;
 	}
 
-	private MapCenter getCenterCenter(List<MapCenter> list)
+	private MapCenter getCenterCenter(List<MapCenter> list,MapCenter belong)
 	{
 		Bounds bounds = new Bounds(list[0].position,Vector3.one);
 		for (int i = 1; i < list.Count; i++)
@@ -413,6 +416,8 @@ public class MyPolygonTest : MonoBehaviour
 			bounds.Encapsulate(list[i].position);
 		}
 
+		belong.bounds = bounds;		
+		
 		var centerPoint = bounds.center;
 		MapCenter center = list[0];
 		var minDst = float.MaxValue;
@@ -428,6 +433,85 @@ public class MyPolygonTest : MonoBehaviour
 		}
 		
 		return center;
+	}
+
+	private List<Vector2> getFontPosition(List<MapCenter> list, MapCenter belong, int num)
+	{
+		List<Vector2> list_result = new List<Vector2>();
+		
+		Bounds bounds = new Bounds(list[0].position,Vector3.one);
+		for (int i = 1; i < list.Count; i++)
+		{
+			bounds.Encapsulate(list[i].position);
+		}
+
+		belong.bounds = bounds;		
+		
+		var centerPoint = bounds.center;
+		var size = bounds.size;
+		var cut = num;
+		var isX = size.x >= size.y;
+		if (isX)
+		{
+			var gap = size.x / cut;
+			var xStart = centerPoint.x - size.x / 2;
+			for (int i = 0; i < num; i++)
+			{
+				var xLeft = xStart + i * gap;
+				var xRight = xStart + (i + 1) * gap;
+
+				Bounds bounds_part = new Bounds(Vector3.zero, Vector3.one);
+				for (int j = 0; j < list.Count; j++)
+				{
+					var cent = list[j];
+					if (cent.position.x >= xLeft && cent.position.x <= xRight)
+					{
+						if (bounds_part.center == Vector3.zero)
+						{
+							bounds_part = new Bounds(cent.position,Vector3.one);
+						}
+						else
+						{
+							bounds_part.Encapsulate(cent.position);
+						}
+					}
+				}
+				if(bounds_part.center != Vector3.zero)
+				list_result.Add(bounds_part.center);
+			}
+		}
+		else
+		{
+			var gap = size.y / cut;
+			var xStart = centerPoint.y - size.y / 2;
+			for (int i = num-1; i >= 0; i--)
+			{
+				var xLeft = xStart + i * gap;
+				var xRight = xStart + (i + 1) * gap;
+
+				Bounds bounds_part = new Bounds(Vector3.zero, Vector3.one);
+				for (int j = 0; j < list.Count; j++)
+				{
+					var cent = list[j];
+					if (cent.position.y >= xLeft && cent.position.y <= xRight)
+					{
+						if (bounds_part.center == Vector3.zero)
+						{
+							bounds_part = new Bounds(cent.position,Vector3.one);
+						}
+						else
+						{
+							bounds_part.Encapsulate(cent.position);
+						}
+					}
+				}
+				if(bounds_part.center != Vector3.zero)
+				list_result.Add(bounds_part.center);
+			}
+		}
+		
+		
+		return list_result;
 	}
 	
 	private void renderMapData()
@@ -499,8 +583,36 @@ public class MyPolygonTest : MonoBehaviour
 			}
 
 
-			var center = getCenterCenter(list_all);
+			var center = getCenterCenter(list_all,big);
 			this.gizmosCenter.Add(center.position);
+
+			var list_font = getFontPosition(list_all, big, 3);
+			if (list_font.Count != 3)
+			{
+				var tmp = Instantiate(this.textMeshPro, Vector3.zero, Quaternion.identity);
+				tmp.transform.position = center.position;
+				tmp.fontSize = Mathf.Lerp(20, 50, (big.BoundsSize) / 20);
+				tmp.text = "小国家";
+				tmp.color = center.colorWithoutAlpha;
+			}
+			else
+			{
+				List<string> arr = new List<string>(){"国","家","名"};
+				for (int i = 0; i < 3; i++)
+				{
+					var tmp = Instantiate(this.textMeshPro, Vector3.zero, Quaternion.identity);
+					tmp.transform.position = list_font[i];
+					tmp.fontSize = Mathf.Lerp(20, 50, (big.BoundsSize) / 20);
+					tmp.text = arr[i];
+					tmp.color = center.colorWithoutAlpha;
+				}
+			}
+			
+			
+
+//			var goname = Instantiate(this.goName, Vector3.zero, Quaternion.identity);
+//			goname.transform.position = big.position;
+//			goname.GetComponentInChildren<TextMeshPro>().text = "宗门";
 		}
 
 		foreach (var mid in list_mid)

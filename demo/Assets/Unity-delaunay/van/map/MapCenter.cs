@@ -17,6 +17,9 @@ namespace van.map
         public MapCenter boss = null;
         public List<MapCenter> underList = new List<MapCenter>();
 
+        public Bounds bounds;
+        public float BoundsSize => bounds.size.x;
+        
         private Color _color = Color.black;
         public Color color
         {
@@ -32,6 +35,24 @@ namespace van.map
                 }
 
                 return this.boss.color;
+            }
+        }
+
+        private Color _colorWithoutAlpha= Color.black;
+        public Color colorWithoutAlpha
+        {
+            get
+            {
+                if (this._colorWithoutAlpha == Color.black)
+                {
+                    this._colorWithoutAlpha = new Color();
+                    this._colorWithoutAlpha.r = this.color.r;
+                    this._colorWithoutAlpha.g = this.color.g;
+                    this._colorWithoutAlpha.b = this.color.b;
+                    this._colorWithoutAlpha.a = 1;
+                }
+
+                return this._colorWithoutAlpha;
             }
         }
         
