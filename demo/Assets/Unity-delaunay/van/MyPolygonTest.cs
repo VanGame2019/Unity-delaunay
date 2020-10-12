@@ -7,6 +7,7 @@ using Delaunay;
 using Delaunay.Geo;
 using ETModel;
 using TMPro;
+using UnityEngine.SceneManagement;
 using van;
 using van.map;
 using Random = UnityEngine.Random;
@@ -57,6 +58,7 @@ public class MyPolygonTest : MonoBehaviour
 				}
 			}
 			Debug.Log(center.position);
+			SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
 		}
 		
 	}
@@ -509,13 +511,41 @@ public class MyPolygonTest : MonoBehaviour
 				list_result.Add(bounds_part.center);
 			}
 		}
-		
+
+		//平均中间的字的位子
+		if (isX)
+		{
+			if (list_result.Count > 2)
+			{
+				var gap = list_result[list_result.Count - 1].x - list_result[0].x;
+				gap /= list_result.Count - 1;
+				for (int i = 1; i < list_result.Count-1; i++)
+				{
+					list_result[i] = new Vector2(list_result[0].x + gap * i,list_result[i].y);
+				}
+			}
+		}
+		else
+		{
+			if (list_result.Count > 2)
+			{
+				var gap = list_result[list_result.Count - 1].y - list_result[0].y;
+				gap /= list_result.Count - 1;
+				for (int i = 1; i < list_result.Count-1; i++)
+				{
+					list_result[i] = new Vector2(list_result[i].x,list_result[0].y + gap * i);
+				}
+			}
+		}
 		
 		return list_result;
 	}
-	
+	private List<string> list_country_names = new List<string>(){
+		"越国","天罗国","紫金国","风都国","列元国","十三族盟","吴国","火梁国","碧平国","幻楚国","西韩国","黄周国","仙齐帝国",
+		"什么国","冬临国","大金国","乱星海"};
 	private void renderMapData()
 	{
+		var list_country_name_temp = new List<string>(list_country_names);
 		foreach (var mapCenter in mapCenters)
 		{
 			var center = mapCenter;
@@ -585,25 +615,31 @@ public class MyPolygonTest : MonoBehaviour
 
 			var center = getCenterCenter(list_all,big);
 			this.gizmosCenter.Add(center.position);
+			
+			var name = MyModelTool.RandomElement(list_country_name_temp);
+			list_country_name_temp.Remove(name);
 
-			var list_font = getFontPosition(list_all, big, 3);
-			if (list_font.Count != 3)
+			var name_count = name.Length;
+			
+			var list_font = getFontPosition(list_all, big, name_count);
+			if (list_font.Count != name_count)
 			{
 				var tmp = Instantiate(this.textMeshPro, Vector3.zero, Quaternion.identity);
 				tmp.transform.position = center.position;
 				tmp.fontSize = Mathf.Lerp(20, 50, (big.BoundsSize) / 20);
-				tmp.text = "小国家";
+				tmp.text = name;
 				tmp.color = center.colorWithoutAlpha;
 			}
 			else
 			{
-				List<string> arr = new List<string>(){"国","家","名"};
-				for (int i = 0; i < 3; i++)
+				
+//				List<string> arr = new List<string>(){"国","家","名"};
+				for (int i = 0; i < name.Length; i++)
 				{
 					var tmp = Instantiate(this.textMeshPro, Vector3.zero, Quaternion.identity);
 					tmp.transform.position = list_font[i];
 					tmp.fontSize = Mathf.Lerp(20, 50, (big.BoundsSize) / 20);
-					tmp.text = arr[i];
+					tmp.text = name.Substring(i,1);
 					tmp.color = center.colorWithoutAlpha;
 				}
 			}

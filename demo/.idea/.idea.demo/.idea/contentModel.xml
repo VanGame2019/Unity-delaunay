@@ -67,10 +67,14 @@
             <e p="MyRandom.cs" t="Include" />
           </e>
           <e p="van" t="Include">
+            <e p="Main_WalkMap.cs" t="Include" />
             <e p="map" t="Include">
               <e p="MapCenter.cs" t="Include" />
               <e p="MapEdge.cs" t="Include" />
               <e p="MapExtension.cs" t="Include" />
+            </e>
+            <e p="mapSmall" t="Include">
+              <e p="SmallMapGenerator.cs" t="Include" />
             </e>
             <e p="MyPolygonTest.cs" t="Include" />
             <e p="NoisyEdge.cs" t="Include" />
